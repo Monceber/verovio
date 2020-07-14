@@ -70,6 +70,10 @@ void View::DrawControlElement(DeviceContext *dc, ControlElement *element, Measur
     assert(measure);
     assert(element);
 
+    if (m_doc->GetType() == Facs && element->HasFacs()) {
+        element->SetFromFacsimile(m_doc);
+    }
+
     // For dir, dynam, fermata, and harm, we do not consider the @tstamp2 for rendering
     if (element->Is({ BRACKETSPAN, FIGURE, GLISS, HAIRPIN, PHRASE, OCTAVE, SLUR, TIE })) {
         // create placeholder

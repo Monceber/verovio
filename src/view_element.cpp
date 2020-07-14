@@ -79,6 +79,10 @@ void View::DrawLayerElement(DeviceContext *dc, LayerElement *element, Layer *lay
         return;
     }
 
+    if (m_doc->GetType() == Facs && element->HasFacs()) {
+        element->SetFromFacsimile(m_doc);
+    }
+
     int previousColor = m_currentColour;
 
     if (element == m_currentElement) {
@@ -248,7 +252,7 @@ void View::DrawAccid(DeviceContext *dc, LayerElement *element, Layer *layer, Sta
     std::wstring accidStr = accid->GetSymbolStr();
 
     int x = accid->GetDrawingX();
-    int y = accid->GetDrawingY();
+    int y = (m_doc->GetType() == Facs && accid->HasFacs()) ? ToLogicalY(accid->GetDrawingY()) : accid->GetDrawingY();
 
     if ((accid->GetFunc() == accidLog_FUNC_edit) && (!accid->HasEnclose())) {
         y = staff->GetDrawingY();
@@ -1106,8 +1110,16 @@ void View::DrawMeterSig(DeviceContext *dc, LayerElement *element, Layer *layer, 
 
     dc->StartGraphic(element, "", element->GetUuid());
 
-    int y = staff->GetDrawingY() - m_doc->GetDrawingUnit(staff->m_drawingStaffSize) * (staff->m_drawingLines - 1);
-    int x = element->GetDrawingX();
+    int x, y;
+    if (m_doc->GetType() == Facs && meterSig->HasFacs()) {
+        y = ToLogicalY(staff->GetDrawingY())
+            - m_doc->GetDrawingUnit(staff->m_drawingStaffSize) * (staff->m_drawingLines - 1);
+        x = meterSig->GetDrawingX();
+    }
+    else {
+        y = staff->GetDrawingY() - m_doc->GetDrawingUnit(staff->m_drawingStaffSize) * (staff->m_drawingLines - 1);
+        x = element->GetDrawingX();
+    }
 
     if (meterSig->GetForm() == METERFORM_invis) {
         // just skip
@@ -1336,7 +1348,8 @@ void View::DrawNote(DeviceContext *dc, LayerElement *element, Layer *layer, Staf
     if (note->m_crossStaff) staff = note->m_crossStaff;
 
     bool drawingCueSize = note->GetDrawingCueSize();
-    int noteY = element->GetDrawingY();
+    int noteY
+        = (m_doc->GetType() == Facs && note->HasFacs()) ? ToLogicalY(element->GetDrawingY()) : element->GetDrawingY();
     int noteX = element->GetDrawingX();
     int drawingDur;
     wchar_t fontNo;
@@ -1449,9 +1462,20 @@ void View::DrawStem(DeviceContext *dc, LayerElement *element, Layer *layer, Staf
 
     dc->StartGraphic(element, "", element->GetUuid());
 
-    DrawFilledRectangle(dc, stem->GetDrawingX() - m_doc->GetDrawingStemWidth(staff->m_drawingStaffSize) / 2,
-        stem->GetDrawingY(), stem->GetDrawingX() + m_doc->GetDrawingStemWidth(staff->m_drawingStaffSize) / 2,
-        stem->GetDrawingY() - stem->GetDrawingStemLen());
+    int y1, y2;
+    Note *note = dynamic_cast<Note *>(stem->GetFirstAncestor(NOTE));
+    assert(note);
+    if (m_doc->GetType() == Facs && note->HasFacs()) {
+        y1 = ToLogicalY(stem->GetDrawingY());
+        y2 = ToLogicalY(stem->GetDrawingY()) - stem->GetDrawingStemLen();
+    }
+    else {
+        y1 = stem->GetDrawingY();
+        y2 = stem->GetDrawingY() - stem->GetDrawingStemLen();
+    }
+
+    DrawFilledRectangle(dc, stem->GetDrawingX() - m_doc->GetDrawingStemWidth(staff->m_drawingStaffSize) / 2, y1,
+        stem->GetDrawingX() + m_doc->GetDrawingStemWidth(staff->m_drawingStaffSize) / 2, y2);
 
     DrawLayerChildren(dc, stem, layer, staff, measure);
 

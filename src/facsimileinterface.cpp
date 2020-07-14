@@ -105,4 +105,17 @@ void FacsimileInterface::SetZone(Zone *zone)
     }
 }
 
+
+void FacsimileInterface::SetFromFacsimile(Doc *doc)
+{
+    if (!this->HasFacs()) return;
+    if (this->GetZone() == NULL) {
+        assert(doc);
+        std::string facsUuid = (GetFacs().compare(0, 1, "#") == 0 ? GetFacs().substr(1) : GetFacs());
+        Zone *zone = doc->GetFacsimile()->FindZoneByUuid(facsUuid);
+        assert(zone);
+        this->SetZone(zone);
+    }
+}
+
 } // namespace vrv

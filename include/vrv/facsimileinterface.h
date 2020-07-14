@@ -12,6 +12,7 @@
 #include "atts_shared.h"
 
 namespace vrv {
+class Doc;
 class FunctorParams;
 class View;
 class Zone;
@@ -51,6 +52,8 @@ public:
 
     /** Get the zone */
     Zone *GetZone() { return m_zone; }
+
+    void SetFromFacsimile(Doc *doc);
 
 private:
     Zone *m_zone = NULL;
