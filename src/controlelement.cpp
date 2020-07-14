@@ -13,6 +13,7 @@
 
 //----------------------------------------------------------------------------
 
+#include "doc.h"
 #include "functorparams.h"
 #include "rend.h"
 #include "system.h"
@@ -25,8 +26,10 @@ namespace vrv {
 // ControlElement
 //----------------------------------------------------------------------------
 
-ControlElement::ControlElement() : FloatingObject("ce"), LinkingInterface(), AttLabelled(), AttTyped()
+ControlElement::ControlElement()
+    : FloatingObject("ce"), FacsimileInterface(), LinkingInterface(), AttLabelled(), AttTyped()
 {
+    RegisterInterface(FacsimileInterface::GetAttClasses(), FacsimileInterface::IsInterface());
     RegisterInterface(LinkingInterface::GetAttClasses(), LinkingInterface::IsInterface());
     RegisterAttClass(ATT_LABELLED);
     RegisterAttClass(ATT_TYPED);
@@ -49,6 +52,7 @@ ControlElement::~ControlElement() {}
 void ControlElement::Reset()
 {
     FloatingObject::Reset();
+    FacsimileInterface::Reset();
     LinkingInterface::Reset();
     ResetLabelled();
     ResetTyped();
@@ -60,6 +64,28 @@ data_HORIZONTALALIGNMENT ControlElement::GetChildRendAlignment()
     if (!rend || !rend->HasHalign()) return HORIZONTALALIGNMENT_NONE;
 
     return rend->GetHalign();
+}
+
+int ControlElement::GetDrawingX() const {
+    // If this element has a facsimile and we are in facsimile mode, use Facsimile::GetDrawingX
+    if (this->HasFacs()) {
+        Doc *doc = dynamic_cast<Doc *>(this->GetFirstAncestor(DOC));
+        assert(doc);
+        if (doc->GetType() == Facs) return FacsimileInterface::GetDrawingX();
+    }
+
+    return FloatingObject::GetDrawingX();
+}
+
+int ControlElement::GetDrawingY() const {
+    // If this element has a facsimile and we are in facsimile mode, use Facsimile::GetDrawingX
+    if (this->HasFacs()) {
+        Doc *doc = dynamic_cast<Doc *>(this->GetFirstAncestor(DOC));
+        assert(doc);
+        if (doc->GetType() == Facs) return FacsimileInterface::GetDrawingY();
+    }
+
+    return FloatingObject::GetDrawingY();
 }
 
 //----------------------------------------------------------------------------

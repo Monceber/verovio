@@ -10,6 +10,7 @@
 
 #include "atts_shared.h"
 #include "devicecontextbase.h"
+#include "facsimileinterface.h"
 #include "floatingobject.h"
 #include "linkinginterface.h"
 
@@ -23,7 +24,7 @@ namespace vrv {
  * This class represents elements appearing within a measure.
  * It is not an abstract class but should not be instanciated directly.
  */
-class ControlElement : public FloatingObject, public LinkingInterface, public AttLabelled, public AttTyped {
+class ControlElement : public FloatingObject, public FacsimileInterface, public LinkingInterface, public AttLabelled, public AttTyped {
 public:
     /**
      * @name Constructors, destructors, reset methods
@@ -38,9 +39,18 @@ public:
     ///@}
 
     /**
+     * @name Get and set the X and Y drawing position
+     */
+    ///@{
+    virtual int GetDrawingX() const;
+    virtual int GetDrawingY() const;
+    ///@}
+
+    /**
      * @name Getter to interfaces
      */
     ///@{
+    virtual FacsimileInterface *GetFascimileInterface() { return dynamic_cast<FacsimileInterface *>(this); }
     virtual LinkingInterface *GetLinkingInterface() { return dynamic_cast<LinkingInterface *>(this); }
     ///@}
 
