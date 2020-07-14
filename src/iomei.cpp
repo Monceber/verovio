@@ -1139,6 +1139,7 @@ void MEIOutput::WriteControlElement(pugi::xml_node currentNode, ControlElement *
     assert(controlElement);
 
     WriteXmlId(currentNode, controlElement);
+    WriteFacsimileInterface(currentNode, controlElement);
     WriteLinkingInterface(currentNode, controlElement);
     controlElement->WriteLabelled(currentNode);
     controlElement->WriteTyped(currentNode);
@@ -1428,6 +1429,7 @@ void MEIOutput::WriteLayerElement(pugi::xml_node currentNode, LayerElement *elem
     assert(element);
 
     WriteXmlId(currentNode, element);
+    WriteFacsimileInterface(currentNode, element);
     WriteLinkingInterface(currentNode, element);
     element->WriteLabelled(currentNode);
     element->WriteTyped(currentNode);
@@ -3943,6 +3945,7 @@ bool MEIInput::ReadMeasureChildren(Object *parent, pugi::xml_node parentNode)
 bool MEIInput::ReadControlElement(pugi::xml_node element, ControlElement *object)
 {
     SetMeiUuid(element, object);
+    ReadFacsimileInterface(element, object);
     ReadLinkingInterface(element, object);
     object->ReadLabelled(element);
     object->ReadTyped(element);
@@ -4562,6 +4565,7 @@ bool MEIInput::ReadLayerElement(pugi::xml_node element, LayerElement *object)
     }
 
     SetMeiUuid(element, object);
+    ReadFacsimileInterface(element, object);
     ReadLinkingInterface(element, object);
     object->ReadLabelled(element);
     object->ReadTyped(element);
@@ -4693,7 +4697,6 @@ bool MEIInput::ReadClef(Object *parent, pugi::xml_node clef)
 {
     Clef *vrvClef = new Clef();
     ReadLayerElement(clef, vrvClef);
-    ReadFacsimileInterface(clef, vrvClef);
 
     vrvClef->ReadClefShape(clef);
     vrvClef->ReadColor(clef);
@@ -4710,7 +4713,6 @@ bool MEIInput::ReadCustos(Object *parent, pugi::xml_node custos)
     Custos *vrvCustos = new Custos();
     ReadLayerElement(custos, vrvCustos);
 
-    ReadFacsimileInterface(custos, vrvCustos);
     ReadPitchInterface(custos, vrvCustos);
     ReadPositionInterface(custos, vrvCustos);
     vrvCustos->ReadColor(custos);
@@ -4934,7 +4936,6 @@ bool MEIInput::ReadNc(Object *parent, pugi::xml_node nc)
     ReadLayerElement(nc, vrvNc);
 
     ReadDurationInterface(nc, vrvNc);
-    ReadFacsimileInterface(nc, vrvNc);
     ReadPitchInterface(nc, vrvNc);
     ReadPositionInterface(nc, vrvNc);
     vrvNc->ReadColor(nc);
@@ -4949,7 +4950,6 @@ bool MEIInput::ReadNeume(Object *parent, pugi::xml_node neume)
 {
     Neume *vrvNeume = new Neume();
     ReadLayerElement(neume, vrvNeume);
-    ReadFacsimileInterface(neume, vrvNeume);
 
     vrvNeume->ReadColor(neume);
 
@@ -5055,8 +5055,6 @@ bool MEIInput::ReadSyl(Object *parent, pugi::xml_node syl)
     vrvSyl->ReadLang(syl);
     vrvSyl->ReadTypography(syl);
     vrvSyl->ReadSylLog(syl);
-
-    ReadFacsimileInterface(syl, vrvSyl);
 
     parent->AddChild(vrvSyl);
     ReadUnsupportedAttr(syl, vrvSyl);
