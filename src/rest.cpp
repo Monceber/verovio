@@ -18,8 +18,10 @@
 #include "elementpart.h"
 #include "fermata.h"
 #include "functorparams.h"
+#include "layer.h"
 #include "smufl.h"
 #include "staff.h"
+#include "transposition.h"
 #include "vrv.h"
 
 namespace vrv {
@@ -121,6 +123,17 @@ int Rest::GetRestLocOffset(int loc)
     }
 
     return loc;
+}
+
+void Rest::UpdateFromTransLoc(const TransPitch &tp)
+{
+    if (HasOloc() && HasPloc()) {
+        SetPloc(tp.GetPitchName());
+
+        if (GetOloc() != tp.m_oct) {
+            SetOloc(tp.m_oct);
+        }
+    }
 }
 
 //----------------------------------------------------------------------------
@@ -242,6 +255,69 @@ int Rest::ResetHorizontalAlignment(FunctorParams *functorParams)
     PositionInterface::InterfaceResetHorizontalAlignment(functorParams, this);
 
     return FUNCTOR_CONTINUE;
+}
+
+int Rest::Transpose(FunctorParams *functorParams)
+{
+    TransposeParams *params = dynamic_cast<TransposeParams *>(functorParams);
+    assert(params);
+
+    if ((!HasOloc() || !HasPloc()) && !HasLoc()) return FUNCTOR_SIBLINGS;
+
+    // Find whether current layer is top, middle (either one if multiple) or bttom
+    Staff *parentStaff = dynamic_cast<Staff *>(GetFirstAncestor(STAFF));
+    assert(parentStaff);
+
+    Layer *parentLayer = dynamic_cast<Layer *>(GetFirstAncestor(LAYER));
+    assert(parentLayer);
+
+    Layer *firstLayer = dynamic_cast<Layer *>(parentStaff->GetFirst());
+    Layer *lastLayer = dynamic_cast<Layer *>(parentStaff->GetLast());
+
+    const bool isTopLayer = (firstLayer->GetN() == parentLayer->GetN());
+    const bool isBottomLayer = (lastLayer->GetN() == parentLayer->GetN());
+
+    // transpose based on @oloc and @ploc
+    if (HasOloc() && HasPloc()) {
+        const TransPitch centralLocation(6, 0, 4); // middle location of the staff
+        TransPitch restLoc(GetPloc() - PITCHNAME_c, 0, GetOloc());
+        params->m_transposer->Transpose(restLoc);
+        const bool isRestOnSpace = static_cast<bool>((restLoc.m_oct * 7 + restLoc.m_pname) % 2);
+        // on outer layers move rest on odd locations one line further 
+        // in middle layers tolerate even locations to not risk collisions
+        if (isTopLayer && isRestOnSpace) {
+            restLoc++;
+        }
+        else if (isBottomLayer && isRestOnSpace) {
+            restLoc--;
+        }
+        if ((isTopLayer && (restLoc < centralLocation)) || (isBottomLayer && (restLoc > centralLocation))) {
+            restLoc = centralLocation;
+        }
+        
+        UpdateFromTransLoc(restLoc);
+    }
+    // transpose based on @loc
+    else if (HasLoc()) {
+        constexpr int centralLocation(4);
+        int transval = params->m_transposer->GetTranspositionIntervalClass();
+        int diatonic;
+        int chromatic;
+        params->m_transposer->IntervalToDiatonicChromatic(diatonic, chromatic, transval);
+        int transposedLoc = GetLoc() + diatonic;
+        // on outer layers move rest on odd locations one line further
+        // in middle layers tolerate even locations to not risk collisions
+        if (isTopLayer) transposedLoc += abs(transposedLoc % 2);
+        else if (isBottomLayer) transposedLoc -= abs(transposedLoc % 2);
+        if ((isTopLayer && (transposedLoc < centralLocation)) || (isBottomLayer && (transposedLoc > centralLocation))) {
+            SetLoc(centralLocation);
+        }
+        else {
+            SetLoc(transposedLoc);
+        }
+    }
+
+    return FUNCTOR_SIBLINGS;
 }
 
 } // namespace vrv
