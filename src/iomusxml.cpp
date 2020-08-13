@@ -2842,6 +2842,7 @@ void MusicXmlInput::ReadMusicXmlNote(
             }
             mordent->SetExternalsymbols(mordent, "glyph.num",
                 mordent_attributes.empty() ? "U+E5BD" : GetOrnamentGlyphNumber(mordent_attributes));
+            mordent->SetExternalsymbols(mordent, "glyph.auth", "smufl");
         }
     }
 
@@ -2857,6 +2858,7 @@ void MusicXmlInput::ReadMusicXmlNote(
         // place
         mordent->SetPlace(mordent->AttPlacement::StrToStaffrel(xmlSchleifer.node().attribute("placement").as_string()));
         mordent->SetExternalsymbols(mordent, "glyph.num", "U+E587");
+        mordent->SetExternalsymbols(mordent, "glyph.auth", "smufl");
     }
 
     // trill
